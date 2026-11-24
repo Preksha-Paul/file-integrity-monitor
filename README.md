@@ -60,7 +60,36 @@ Baseline : 2026-11-24T16:50:24 (4 files)
 4 change(s) found. Logged to fim_alerts.log
 ```
 
-## Try it in a home lab: catch a backdoor account
+## Home lab test: catching a backdoor account
+
+I tested this on a Kali Linux VM by fingerprinting `/etc` (1,482 files), then simulating an attacker creating a hidden user with `sudo useradd backdoor`.
+
+**One command changed 12 files, and the FIM caught every one:**
+
+```
+===== File Integrity Check =====
+Folder   : /etc
+Baseline : 2026-11-24T17:14:52 (1482 files)
+
+[CRITICAL] MODIFIED group  (size 1338 -> 1355 bytes)
+[WARNING]  MODIFIED group-  (size 1325 -> 1338 bytes)
+[WARNING]  MODIFIED gshadow  (size 1122 -> 1135 bytes)
+[WARNING]  MODIFIED gshadow-  (size 1111 -> 1122 bytes)
+[CRITICAL] MODIFIED passwd  (size 3319 -> 3364 bytes)
+[WARNING]  MODIFIED passwd-  (size 3316 -> 3319 bytes)
+[CRITICAL] MODIFIED shadow  (size 1458 -> 1488 bytes)
+[WARNING]  MODIFIED shadow-  (size 1360 -> 1458 bytes)
+[WARNING]  MODIFIED subgid  (size 18 -> 40 bytes)
+[WARNING]  MODIFIED subgid-  (size 0 -> 18 bytes)
+[WARNING]  MODIFIED subuid  (size 18 -> 40 bytes)
+[WARNING]  MODIFIED subuid-  (size 0 -> 18 bytes)
+
+12 change(s) found.
+```
+
+**What the test revealed:** `gshadow` and the backup copies (`passwd-`, `shadow-`, ...) hold the same sensitive data as the originals, and an attacker could edit a backup to cover their tracks. They were only flagged as WARNING, so I updated the tool to treat them as **CRITICAL**.
+
+### Run it yourself
 
 On a Linux VM you own, such as Kali:
 

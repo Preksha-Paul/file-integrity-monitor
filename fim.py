@@ -27,7 +27,7 @@ RED, YELLOW, GREEN, BOLD, RESET = "\033[91m", "\033[93m", "\033[92m", "\033[1m",
 
 # Files attackers love to change. A change to one of these is CRITICAL.
 SENSITIVE = {
-    "passwd", "shadow", "group", "sudoers", "hosts", "crontab",
+    "passwd", "shadow", "group", "gshadow", "sudoers", "hosts", "crontab",
     "sshd_config", "authorized_keys", ".bashrc", ".profile",
 }
 
@@ -76,7 +76,15 @@ def compare(old, new):
 
 def severity(path):
     """CRITICAL if it's a file attackers like to change, otherwise WARNING."""
-    return "CRITICAL" if os.path.basename(path) in SENSITIVE else "WARNING"
+    name = os.path.basename(path)
+    # Linux keeps backup copies like "shadow-" with the same sensitive data.
+    # Attackers can edit these too, so treat them like the original.
+    if name.endswith("-"):
+        name = name[:-1]
+    # Every file inside sudoers.d can give someone admin rights
+    if name in SENSITIVE or "sudoers.d/" in path:
+        return "CRITICAL"
+    return "WARNING"
 
 
 # ---------- Saving and loading the baseline ----------
