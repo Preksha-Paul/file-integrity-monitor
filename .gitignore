@@ -1,0 +1,8 @@
+# Baselines and alerts describe YOUR system - don't publish them
+baseline_*.json
+fim_alerts.log
+
+__pycache__/
+*.pyc
+.venv/
+.vscode/
